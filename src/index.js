@@ -1,87 +1,75 @@
-// Your code here
-// fetch('http://localhost:3000/films')
-// .then(res => res.json())
-// .then(ticketsAvailable => {const numberOfTickets = "capacity"-"tickets_sold"});
-
-// fetch('http://localhost:3000/films')
-//   .then(response => response.json())
-//   .then(data => {
-//     // Access the movie details from the response data
-//     const poster = data.poster;
-//     const title = data.title;
-//     const runtime = data.runtime;
-//     const showtime = data.showtime;
-//     const capacity = data.capacity;
-//     const ticketsSold = data.tickets_sold;
-
-//     // Calculate the number of available tickets
-//     const availableTickets = capacity - ticketsSold;
-
-
 document.addEventListener("DOMContentLoaded", () => {
-    fetch('http://localhost:3000/films')
-        .then(response => response.json())
-        .then(data => {
-            const film = data[0]; 
-            const poster = film.poster;
-            const title = film.title;
-            const runtime = film.runtime;
-            const showtime = film.showtime;
-            const capacity = film.capacity;
-            const ticketsSold = film.tickets_sold;
-            const availableTickets = capacity - ticketsSold;
-            const description = film.description;
+  const baseUrl = "http://localhost:3000";
 
-            document.getElementById('title').textContent = title;
-            document.getElementById('runtime').textContent = runtime;
-            document.getElementById('showtime').textContent = showtime;
-            document.getElementById('description').textContent = description;
-            document.getElementById('availableTickets').textContent = availableTickets;
-            document.getElementById('poster').innerHTML = `<img src="${poster}" alt="Poster">`;
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-        });
+  fetch(`${baseUrl}/films/1`)
+  .then(response => response.json())
+  .then(movie => {
+    const availableTickets = movie.capacity - movie.tickets_sold;
+    document.getElementById('title').textContent = movie.title;
+    document.getElementById('film-info').textContent = movie.description;
+    document.getElementById('runtime').textContent = movie.runtime;
+    document.getElementById('showtime').textContent = movie.showtime;
+    document.getElementById('poster').src = movie.poster;
+    document.getElementById('ticket-num').textContent = availableTickets;
+  })
+  .catch(error => console.error('Error fetching movie details:', error));
+
 });
 
+document.addEventListener("DOMContentLoaded", () => {
+  const ul = document.getElementById("films");
+  const li = ul.firstElementChild
+  ul.removeChild(li)
+  MovieMenu();
 
-const ul = document.getElementById("films");
-const li = ul.firstElementChild
-ul.removeChild(li)
+  function MovieMenu() {
+    fetch("http://localhost:3000/films")
+      .then(response => response.json())
+      .then(movieList => {
+        const ul = document.getElementById("films");
+        movieList.forEach(movie => {
+          const li = document.createElement("li");
+          li.className = "film"; 
+          li.textContent = movie.title;
 
-fetch('http://localhost:3000/films')
- .then(res => res.json())
- .then(movieList => {
-    const list = document.getElementById("films");
-    movieList.forEach(films =>{
-        const makeList = document.createElement("li");
-        makeList.className ="movies"; 
-        makeList.textContent = films.title;
-        makeList.style.color = "#FF0000 ";
-        makeList.style.fontFamily = "fantasy";
-        makeList.style.fontStyle = "italic";
-        list.appendChild(makeList)
-        makeList.addEventListener('click', () => {
-            buyTicket(movie.id);
+          const buyButton = document.getElementById("buy-ticket");
+          buyButton.addEventListener("click", () => {
+            buyTicket(movie);
+          });
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.textContent = "Delete";
+          deleteBtn.addEventListener("click", () => {
+            deleteMovie(movie.id); 
+          });
+
+          li.appendChild(deleteBtn);
+          ul.appendChild(li);
         });
-    })
-})
+      })
+      .catch(error => console.error("Error fetching movies:", error));
+  }
 
 
-function buyTicket(movies) {
-    fetch(`http://localhost:3000/films/${movies}`, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ tickets_sold: 1 }) 
+function deleteMovie(filmId) {
+    fetch(`http://localhost:3000/films/${filmIdId}`, {
+      method: "DELETE"
     })
-    .then(response => response.json())
-    .then(data => {
-        document.getElementById('class').textContent = data.capacity - data.tickets_sold;
-    })
-    .catch(error => {
-        console.error('Error buying ticket:', error);
-    });
-}
+      .then(res => {
+        if (res.ok) {
+          return res.json();
+        }
+        throw new Error("Failed to delete movie");
+      })
+      .then(() => {
+        const listItem = document.getElementsByClassName(`.film[data-id="${filmId}"]`);
+        if (listItem) {
+          listItem.remove();
+        } else {
+          console.error("Movie not found in the list");
+        }
+      })
+      .catch(error => console.error("Error deleting movie:", error));
+  }
+});
 
